@@ -1,0 +1,164 @@
+# CSTBox services init scripts common part
+
+# This file is part of CSTBox.
+#
+# CSTBox is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# CSTBox is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with CSTBox.  If not, see <http://www.gnu.org/licenses/>.
+
+#
+# This file is sourced by scripts placed in /etc/init.d. For standard needs, these scripts
+# only need to define the following environment variables before sourcing us :
+#
+# PATH=/sbin:/usr/sbin:/bin:/usr/bin
+# DESC="<short description displayed when starting/stoping the service>"
+# NAME=<service name>
+# DAEMON=<daemon path>
+# DAEMON_ARGS="<optional daemon arguments>"
+# INIT_VERBOSE=yes
+#
+# Author: Eric Pascual <eric.pascual@cstb.fr>
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+VARRUN=/var/run/cstbox
+VARLOG=/var/log/cstbox
+
+PIDFILE=$VARRUN/$NAME.pid
+LOGFILE=$VARLOG/$NAME.log 
+SCRIPTNAME=/etc/init.d/$NAME
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+
+# setup global definitions, such as PYTHONPATH
+. /etc/cstbox/setenv
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.2-14) to ensure that this file is present
+# and status_of_proc is working.
+. /lib/lsb/init-functions
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+	log_daemon_msg "Starting $NAME ($DESC)"
+	# Return
+	#   0 if daemon has been started
+	#   1 if daemon was already running
+	#   2 if daemon could not be started
+	if [ -f $PIDFILE ] ; then
+		echo -n " already started"
+		RETVAL=1
+	else
+		. $VARRUN/cstbox-dbus
+                echo "" >> $LOGFILE
+                echo "-------- Starting service $NAME at $(date)" >> $LOGFILE
+                # check start dependencies if any
+                if [ -n "$DEPENDS" ] ; then
+                    pgrep $DEPENDS 2>&1 > /dev/null
+                    if [ $? -ne 0 ] ; then
+                       echo "starting not runnning dependency : $DEPENDS"
+                       service $DEPENDS start
+                       sleep 1
+                    fi
+                fi
+
+		$DAEMON $DAEMON_ARGS >> $LOGFILE 2>&1 &
+                pid=$!
+		RETVAL="$?"
+	fi
+
+	# check if the process didn't hang during startup
+	# TODO find something more reliable as a strategy than a basic delayed  check
+	sleep 1
+	kill -0 $pid 2> /dev/null && echo $pid > $PIDFILE || RETVAL=2
+
+	case "$RETVAL" in
+		0|1) log_end_msg 0 ;;
+		2) log_end_msg 1 ;;
+	esac
+
+	return $RETVAL
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+	log_daemon_msg "Stopping $NAME ($DESC)"
+	# Return
+	#   0 if daemon has been stopped
+	#   1 if daemon was already stopped
+	#   2 if daemon could not be stopped
+	#   other if a failure occurred
+	if [ -f $PIDFILE ] ; then
+                echo "" >> $LOGFILE
+                echo "-------- Stopping service $NAME at $(date)" >> $LOGFILE
+		read pid < $PIDFILE
+		kill $pid 2> /dev/null
+		RETVAL="$?"
+	else
+		RETVAL=1
+	fi
+	case "$RETVAL" in
+		0|1) log_end_msg 0 ;;
+		2) log_end_msg 1 ;;
+	esac
+
+	rm -f $PIDFILE
+	return "$RETVAL"
+}
+
+case "$1" in
+  start)
+	do_start
+	;;
+  stop)
+	do_stop
+	;;
+  status)
+        #status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+	pgrep -c -f $DAEMON > /dev/null
+	case "$?" in
+		0) echo "$NAME is running" ; exit 0 ;;
+		*) echo "$NAME is not running" ; exit 1 ;;
+	esac
+        ;;
+  restart|force-reload)
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		;;
+	  *)
+	  	# Failed to stop
+		log_end_msg 1
+		;;
+	esac
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+:

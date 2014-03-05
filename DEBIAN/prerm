@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+# stop service, if running 
+
+PIDFILES_DIR=/var/run/cstbox
+SVC="cstbox-evtdb"
+
+if [ -f $PIDFILES_DIR/$SVC.pid ] ; then
+    service $SVC stop
+fi

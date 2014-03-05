@@ -1,0 +1,12 @@
+Package: cstbox-ext-evtdb
+Version: 1.0.0
+Section: base
+Priority: optional
+Architecture: all
+Depends: python (>=2.7), python (<<3), cstbox-core
+Maintainer: Eric Pascual <eric.pascual@cstb.fr>
+Description: CSTBox events database extension module
+ This package adds a persistence storage of events. It features an extensible
+ architecture, allowing freely interfacing with the appropriate underlying storage
+ engine. A simple text files based storage is included.
+

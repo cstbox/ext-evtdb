@@ -3,7 +3,7 @@ Version: 1.0.0
 Section: base
 Priority: optional
 Architecture: all
-Depends: python (>=2.7), python (<<3), cstbox-core
+Depends: cstbox-core
 Maintainer: Eric Pascual <eric.pascual@cstb.fr>
 Description: CSTBox events database extension module
  This package adds a persistence storage of events. It features an extensible

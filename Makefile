@@ -8,7 +8,7 @@
 # name of the CSTBox module
 MODULE_NAME=evtdb
 
-include $(CSTBOX_DEVEL_HOME)/devel/lib/makefile-dist.mk
+include $(CSTBOX_DEVEL_HOME)/lib/makefile-dist.mk
 
 make_extra_dirs:
 # runtime data storage

@@ -17,6 +17,5 @@ make_extra_dirs:
 copy_files: \
 	copy_bin_files \
 	copy_python_files \
-	copy_init_scripts\
-	copy_etc_files
+	copy_init_scripts
 

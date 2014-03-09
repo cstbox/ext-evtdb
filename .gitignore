@@ -1,0 +1,12 @@
+.backup
+*~
+.ropeproject
+.idea
+.metadata
+**/.idea
+**/.pydevproject
+**/.settings
+.project
+*.deb
+cstbox-*_all/
+deprecated/

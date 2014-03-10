@@ -6,7 +6,7 @@
 # author = Eric PASCUAL - CSTB (eric.pascual@cstb.fr)
 
 # name of the CSTBox module
-MODULE_NAME=evtdb
+MODULE_NAME=ext-evtdb
 
 include $(CSTBOX_DEVEL_HOME)/lib/makefile-dist.mk
 

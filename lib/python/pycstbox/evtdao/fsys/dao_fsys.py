@@ -19,9 +19,6 @@
 """ File based storage for events.
 """
 __author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
-__copyright__ = 'Copyright (c) 2013 CSTB'
-__vcs_id__ = '$Id$'
-__version__ = '1.0.0'
 
 import os
 from datetime import date, datetime

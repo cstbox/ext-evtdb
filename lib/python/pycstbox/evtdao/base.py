@@ -19,9 +19,6 @@
 """ Base material for DAOs implementation and usage.
 """
 __author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
-__copyright__ = 'Copyright (c) 2013 CSTB'
-__vcs_id__ = '$Id$'
-__version__ = '1.0.0'
 
 from datetime import datetime
 import os.path
@@ -96,7 +93,7 @@ def get_dao(dao_name, events_channel=evtmgr.SENSOR_EVENT_CHANNEL, config=None):
         if config:
             cfg = deepcopy(_dao_specs.cfg)
             cfg.update(config)
-            # add config paramter provided variables to global settings ones
+            # add config parameter provided variables to global settings ones
             gs.update(config)
         else:
             cfg = _dao_specs.cfg

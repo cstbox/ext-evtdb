@@ -30,9 +30,6 @@ The concrete DAO to be used must be passed to the constructor.
 """
 
 __author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
-__copyright__ = 'Copyright (c) 2012 CSTB'
-__vcs_id__ = '$Id$'
-__version__ = '1.0.0'
 
 import dbus.exceptions
 import dbus.service

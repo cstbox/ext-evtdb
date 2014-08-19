@@ -109,11 +109,6 @@ def get_dao(dao_name, events_channel=evtmgr.SENSOR_EVENT_CHANNEL, config=None):
             config=cfg
         )
 
-FILTER_FROM_TIME = 'from_time'
-FILTER_TO_TIME = 'to_time'
-FILTER_VAR_TYPE = 'var_type'
-FILTER_VAR_NAME = 'var_name'
-
 DATE_FMT = '%Y-%m-%d'
 TOD_FMT = '%H:%M:%S'
 TS_FMT_SECS = DATE_FMT + ' ' + TOD_FMT
@@ -184,8 +179,7 @@ class AbstractDAO(log.Loggable):
 
         :param str_or_date day:
                 the day for which the events must be extracted.
-                If provided as a string, it must be formated YYYY-MM-DD
-                (following chars are ignored)
+                If provided as a string, it must be formatted as YYYY-MM-DD or YYYY/MM/DD
         :param str var_type:
                 an optional variable type (eg: temperature) which is used to
                 filter the extracted events if provided
@@ -195,22 +189,19 @@ class AbstractDAO(log.Loggable):
         """
         raise NotImplementedError()
 
-    def get_events(self, event_filter):
+    def get_events(self, from_time=None, to_time=None, var_type=None, var_name=None):
         """ Generator for general event queries.
 
         The events are filtered based on the criteria defined by the
-        event_filter parameter. It is a dictionary which keys are the following
-        predefined criteria :
-
-        - from_time : timestamp (in SQL format) of the first event to be returned
-        - to_time : same for the timestamp of the last event
-        - var_type : type of the variable
-        - var_name : name of the variable
+        keyword parameters
 
         Beware that, depending on the filter provided, the amount of returned
         events can be consequent.
 
-        :param event_filter: request criteria
+        :param datetime.datetime from_time: inclusive lower bound of the time span to consider
+        :param datetime.datetime to_time: inclusive upper bound of the time span to consider
+        :param str var_type: type of the variable (ignored if var_name provided)
+        :param str var_name: name of the variable
 
         :returns: the list of corresponding events (as pycstbox.events.TimedEvent instances),
         if any

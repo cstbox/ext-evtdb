@@ -33,6 +33,7 @@ __author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 
 import dbus.exceptions
 import dbus.service
+import dateutil.parser
 
 from pycstbox.log import Loggable
 import pycstbox.evtmgr as evtmgr
@@ -47,6 +48,11 @@ OBJECT_PATH = "/service"
 SERVICE_INTERFACE = dbuslib.make_interface_name(SERVICE_NAME)
 
 TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S.%f'
+
+FILTER_FROM_TIME = 'from_time'
+FILTER_TO_TIME = 'to_time'
+FILTER_VAR_TYPE = 'var_type'
+FILTER_VAR_NAME = 'var_name'
 
 
 class EventsDatabase(service.ServiceContainer):
@@ -164,15 +170,32 @@ class EventDatabaseObject(dbus.service.Object, Loggable):
         Events are returned in D-Bus compatible format
 
         :param dict event_filter:
-            a dictionnary of criteria, as accepted by the DAOs get_events() method
+            DAOs get_events() method keyword parameters  as a dictonary
 
         :returns: a list of events, as serializable tuples
         """
         self.log_debug("get_events(%s) called" % (event_filter))
 
+        if FILTER_FROM_TIME in event_filter:
+            from_time = dateutil.parser.parse(event_filter[FILTER_FROM_TIME])
+            from_day = from_time.date()
+        else:
+            from_time = from_day = None
+
+        if FILTER_TO_TIME in event_filter:
+            to_time = dateutil.parser.parse(event_filter[FILTER_TO_TIME])
+            to_day = to_time.date()
+        else:
+            to_time = to_day = None
+
         return [(ts.strftime(TIMESTAMP_FMT), var_type, var_name, value, data)
                 for ts, var_type, var_name, value, data in
-                self._dao.get_events(event_filter)]
+                self._dao.get_events(
+                    from_time=from_time,
+                    to_time=to_time,
+                    var_type=event_filter.get(FILTER_VAR_TYPE, None),
+                    var_name=event_filter.get(FILTER_VAR_NAME, None)
+                )]
 
 def get_object(channel):
     """Returns the service proxy object for a given event channel if available

@@ -24,14 +24,15 @@ import os
 from datetime import date, datetime
 import json
 
-import pycstbox.evtdao as evtdao
-import pycstbox.evtmgr as evtmgr
-import pycstbox.events as events
+from pycstbox import evtdao
+from pycstbox import evtmgr
+from pycstbox import events
 
 _FNAME_DATE_FMT = '%y%m%d'
 _FILE_EXT = '.evt-log'
 _FLD_SEP = '\t'
 _TS_FMT = '%y%m%d-%H%M%S.%f'
+
 
 class EventsDAO(evtdao.AbstractDAO):
     """ Implements the event data object as a file based storage.
@@ -128,12 +129,12 @@ class EventsDAO(evtdao.AbstractDAO):
 
         # move the value from the dictionary to a "first class" field
         try:
-            value = data_dict[events.VALUE]
+            value = data_dict[events.DataKeys.VALUE]
         except KeyError:
             self._logger.error('missing value field in data (%s)', data)
             return
 
-        del data_dict[events.VALUE]
+        del data_dict[events.DataKeys.VALUE]
         json_data = json.dumps(data_dict)
 
         # check if we have to open a new storage file
@@ -147,15 +148,15 @@ class EventsDAO(evtdao.AbstractDAO):
 
         self._current_file.write(
             '\t'.join([timestamp.strftime(_TS_FMT),
-               var_type,
-               var_name,
+                var_type,
+                var_name,
                 str(value),
-               json_data]) + '\n')
+                json_data]) + '\n')
         self._current_file.flush()
 
     def get_available_days(self, month=None):
         """ See DAOObject class"""
-        if not isinstance(month, tuple):
+        if month and not isinstance(month, tuple):
             raise ValueError('month must be a tuple')
 
         for name in sorted([n for n in os.listdir(self._dbhome) if
@@ -176,7 +177,7 @@ class EventsDAO(evtdao.AbstractDAO):
         if isinstance(day, date):
             yyyy, mm, dd = day.year, day.month, day.day
         else:
-            yyyy, mm, dd = (int(x) for x in day[:10].split('-'))
+            yyyy, mm, dd = (int(x) for x in day[:10].replace('/', '-').split('-'))
 
         fpath = self._get_path_for_day(yyyy, mm, dd)
         try:
@@ -203,23 +204,12 @@ class EventsDAO(evtdao.AbstractDAO):
 
             evtfile.close()
 
-    def get_events(self, event_filter): #pylint: disable=R0912
+    def get_events(self, from_time=None, to_time=None, var_type=None, var_name=None):
         """ See DAOObject class"""
-        self._logger.debug("get_events(%s) called" % (event_filter))
+        self._logger.debug("get_events(%s,%s,%s,%s) called", from_time, to_time, var_type, var_name)
 
-        if evtdao.FILTER_FROM_TIME in event_filter:
-            from_time = \
-                evtdao.strptime(event_filter[evtdao.FILTER_FROM_TIME])
-            from_day = from_time.date()
-        else:
-            from_time = from_day = None
-
-        if evtdao.FILTER_TO_TIME in event_filter:
-            to_time = \
-                evtdao.strptime(event_filter[evtdao.FILTER_TO_TIME])
-            to_day = to_time.date()
-        else:
-            to_time = to_day = None
+        from_day = from_time.date() if from_time else None
+        to_day = to_time.date() if to_time else None
 
         if from_day or to_day:
             scanned_days = [
@@ -230,16 +220,6 @@ class EventsDAO(evtdao.AbstractDAO):
 
         else:
             scanned_days = self.get_available_days()
-
-        if evtdao.FILTER_VAR_TYPE in event_filter:
-            var_type = event_filter[evtdao.FILTER_VAR_TYPE]
-        else:
-            var_type = None
-
-        if evtdao.FILTER_VAR_NAME in event_filter:
-            var_name = event_filter[evtdao.FILTER_VAR_NAME]
-        else:
-            var_name = None
 
         for day in scanned_days:
             sday = day.strftime(evtdao.TS_FMT_FULL)

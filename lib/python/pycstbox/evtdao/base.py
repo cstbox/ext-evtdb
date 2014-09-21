@@ -74,6 +74,7 @@ def get_dao(dao_name, events_channel=evtmgr.SENSOR_EVENT_CHANNEL, config=None):
             the default ones, or defining additional substitution variables
 
     :returns: the DAO instance
+    :rtype: AbstractDAO
 
     :raises ImportError: if we cannot import the module containing the DAO class
     :raises KeyError: if the given DAO name dos not exist
@@ -173,7 +174,7 @@ class AbstractDAO(log.Loggable):
 
     def get_events_for_day(self, day, var_type=None, var_name=None):
         """ Generator returning the events available for a given day,
-        optionaly filtering them by event class and/or var_name.
+        optionally filtering them by event class and/or var_name.
 
         This method is mandatory.
 

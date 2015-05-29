@@ -41,6 +41,7 @@ def log_setLevel(level):
 DriverSpecs = namedtuple('DriverSpecs', 'modname cfg')
 
 CFGKEY_EVTS_DB_HOME_DIR = 'evts_db_home_dir'
+CFGKEY_FLASH_MEM_SUPPORT = 'flash_memory'
 
 #
 # The dictionary of the supported DAOs, together with their configuration

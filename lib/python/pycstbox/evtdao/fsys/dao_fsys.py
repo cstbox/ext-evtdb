@@ -93,6 +93,9 @@ class EventsDAO(evtdao.AbstractDAO):
         self._readonly = readonly
         self._current_file = None
         self._current_day = None
+        self._flash_memory = config.get(evtdao.CFGKEY_FLASH_MEM_SUPPORT, False)
+        if self._flash_memory:
+            self._logger.warning("flash memory support declared: systematic flush on write will be disabled")
 
     def __enter__(self):
         return self
@@ -152,7 +155,13 @@ class EventsDAO(evtdao.AbstractDAO):
                 var_name,
                 str(value),
                 json_data]) + '\n')
-        self._current_file.flush()
+
+        # Do not stress flash memories by too frequent physical writes, and let the
+        # system driver do its job by optimizing this. There is a risk of loosing
+        # some data in case of brutal stop (power loss f.i.) but it's better than
+        # corrupting a whole SD card.
+        if not self._flash_memory:
+            self._current_file.flush()
 
     def get_available_days(self, month=None):
         """ See DAOObject class"""

@@ -55,17 +55,27 @@ if __name__ == '__main__':
         help='Event channels list. If none specified, defaulted to sensor events channel',
         type=_event_channel_name
     )
+    parser.add_argument(
+        '--flash_memory',
+        help="optimize IO strategy for flash memory",
+        dest='flash_memory',
+        action='store_true',
+        default=False
+    )
 
     args = parser.parse_args()
     loglevel = getattr(log, args.loglevel)
 
-    # defaults an empty channel list and remove duplicates if any
+    # use a minimal channel list if not supplied, and remove duplicates if any
     channels = list(set(args.channels)) if args.channels else [evtmgr.SENSOR_EVENT_CHANNEL]
 
     dbuslib.dbus_init()
 
     evtdao.log_setLevel(loglevel)
-    daos = [(ch, evtdao.get_dao(DAO_name, ch)) for ch in channels]
+    config = {
+        evtdao.CFGKEY_FLASH_MEM_SUPPORT: args.flash_memory
+    }
+    daos = [(ch, evtdao.get_dao(DAO_name, ch, config=config)) for ch in channels]
 
     svc = evtdb.EventsDatabase(dbuslib.get_bus(), daos)
     svc.log_setLevel(loglevel)

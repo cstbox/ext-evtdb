@@ -170,11 +170,11 @@ class EventDatabaseObject(dbus.service.Object, Loggable):
         Events are returned in D-Bus compatible format
 
         :param dict event_filter:
-            DAOs get_events() method keyword parameters  as a dictonary
+            DAOs get_events() method keyword parameters as a dictionnary
 
         :returns: a list of events, as serializable tuples
         """
-        self.log_debug("get_events(%s) called" % (event_filter))
+        self.log_debug("get_events(%s) called", event_filter)
 
         if FILTER_FROM_TIME in event_filter:
             from_time = dateutil.parser.parse(event_filter[FILTER_FROM_TIME])
@@ -196,6 +196,7 @@ class EventDatabaseObject(dbus.service.Object, Loggable):
                     var_type=event_filter.get(FILTER_VAR_TYPE, None),
                     var_name=event_filter.get(FILTER_VAR_NAME, None)
                 )]
+
 
 def get_object(channel):
     """Returns the service proxy object for a given event channel if available

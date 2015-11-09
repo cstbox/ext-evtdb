@@ -103,8 +103,10 @@ def get_dao(dao_name, events_channel=evtmgr.SENSOR_EVENT_CHANNEL, config=None):
         # substitute variables (if any) in configuration values, handling
         # replacement of home dir and environment variables
         for key in cfg:
-            value = cfg[key] % gs
-            cfg[key] = os.path.expanduser(os.path.expandvars(value))
+            value = cfg[key]
+            if isinstance(value, basestring):
+                value = cfg[key] % gs
+                cfg[key] = os.path.expanduser(os.path.expandvars(value))
 
         return dao_module.EventsDAO(
             events_channel=events_channel,

@@ -11,3 +11,4 @@
 cstbox-*_all/
 deprecated/
 lib/python/pycstbox/__init__.py
+*.tgz

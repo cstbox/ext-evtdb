@@ -29,16 +29,16 @@ upper layers.
 The concrete DAO to be used must be passed to the constructor.
 """
 
-__author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
-
 import dbus.exceptions
 import dbus.service
 import dateutil.parser
 
 from pycstbox.log import Loggable
-import pycstbox.evtmgr as evtmgr
-import pycstbox.service as service
-import pycstbox.dbuslib as dbuslib
+from pycstbox import evtmgr
+from pycstbox import service
+from pycstbox import dbuslib
+
+__author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 
 
 SERVICE_NAME = "EventDatabase"
@@ -74,8 +74,8 @@ class EventsDatabase(service.ServiceContainer):
         if not daos:
             raise ValueError('no DAO provided')
 
-        svc_objects = [(EventDatabaseObject(channel, dao), '/' + channel)
-                       for channel, dao in daos
+        svc_objects = [
+            (EventDatabaseObject(channel, dao), '/' + channel) for channel, dao in daos
         ]
 
         super(EventsDatabase, self).__init__(SERVICE_NAME, conn, svc_objects)
@@ -124,13 +124,32 @@ class EventDatabaseObject(dbus.service.Object, Loggable):
         """ Cleanup before stop """
         self._dao.close()
 
-    @dbus.service.method(SERVICE_INTERFACE, out_signature='as')
-    def get_available_days(self):
+    @dbus.service.method(SERVICE_INTERFACE)
+    def flush(self):
+        """ Flushes pending writes. """
+        self._dao.flush()
+
+    @dbus.service.method(SERVICE_INTERFACE, in_signature="nn", out_signature='as')
+    def get_available_days(self, year=0, month=0):
         """ Returns the list of days for which events have been stored.
 
-        The result is an array of dates formatted as "YYYY-MM-DD"
+        The search is filtered by the provided year and month if not null.
+
+        Parameters:
+            year : int
+                the year (0 if no filtering)
+            month : int
+                the month number (1 <= month <= 12) or 0 if no filtering
+                on the month. If year == 0 this parameter is ognored
+
+        The result is an array of dates formatted as "YYYY-MM-DD" strings
         """
-        result = [str(day) for day in self._dao.get_available_days()]
+        if year:
+            time_line_filter = (int(year), int(month))
+        else:
+            time_line_filter = None
+        result = [str(day) for day in self._dao.get_available_days(time_line_filter)]
+
         return result
 
     @dbus.service.method(SERVICE_INTERFACE,
@@ -157,9 +176,14 @@ class EventDatabaseObject(dbus.service.Object, Loggable):
         self.log_debug("get_events_for_day('%s','%s','%s') called" %
                            (day, var_type, var_name))
 
-        return [(ts.strftime(TIMESTAMP_FMT), var_type, var_name, value, data)
-                for ts, var_type, var_name, value, data in
-                self._dao.get_events_for_day(day, var_type, var_name)]
+        return [(
+                    evt.timestamp.strftime(TIMESTAMP_FMT),
+                    evt.var_type,
+                    evt.var_name,
+                    evt.value,
+                    evt.data
+                )
+                for evt in self._dao.get_events_for_day(day, var_type, var_name)]
 
     @dbus.service.method(SERVICE_INTERFACE,
                          in_signature='a{sv}',
@@ -170,7 +194,7 @@ class EventDatabaseObject(dbus.service.Object, Loggable):
         Events are returned in D-Bus compatible format
 
         :param dict event_filter:
-            DAOs get_events() method keyword parameters as a dictionnary
+            DAOs get_events() method keyword parameters as a dictionary
 
         :returns: a list of events, as serializable tuples
         """
@@ -188,8 +212,14 @@ class EventDatabaseObject(dbus.service.Object, Loggable):
         else:
             to_time = to_day = None
 
-        return [(ts.strftime(TIMESTAMP_FMT), var_type, var_name, value, data)
-                for ts, var_type, var_name, value, data in
+        return [(
+                    evt.timestamp.strftime(TIMESTAMP_FMT),
+                    evt.var_type,
+                    evt.var_name,
+                    evt.value,
+                    evt.data
+                )
+                for evt in
                 self._dao.get_events(
                     from_time=from_time,
                     to_time=to_time,
@@ -205,4 +235,4 @@ def get_object(channel):
     :returns: the requested service instance, if exists
     :raises ValueError: if no bus name match the requested channel
     """
-    return dbuslib.get_object(SERVICE_NAME, channel)
+    return dbuslib.get_object(SERVICE_NAME, '/' + channel)

@@ -13,3 +13,4 @@ deprecated/
 lib/python/pycstbox/__init__.py
 *.tgz
 RELEASE-VERSION
+DEBIAN/control

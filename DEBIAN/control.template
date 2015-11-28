@@ -1,5 +1,5 @@
 Package: cstbox-ext-evtdb
-Version: 1.1.0
+Version: %(version)s
 Section: base
 Priority: optional
 Architecture: all

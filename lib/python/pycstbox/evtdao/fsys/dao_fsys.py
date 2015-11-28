@@ -18,7 +18,6 @@
 
 """ File based storage for events.
 """
-__author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 
 import os
 from datetime import date, datetime
@@ -27,6 +26,9 @@ import json
 from pycstbox import evtdao
 from pycstbox import evtmgr
 from pycstbox import events
+
+__author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
+
 
 _FNAME_DATE_FMT = '%y%m%d'
 _FILE_EXT = '.evt-log'
@@ -162,6 +164,15 @@ class EventsDAO(evtdao.AbstractDAO):
         # corrupting a whole SD card.
         if not self._flash_memory:
             self._current_file.flush()
+
+    def flush(self):
+        """ Flushes the pending writes.
+        """
+        if self._current_file:
+            self._current_file.flush()
+            self._logger.info('on-demand data flush executed')
+        else:
+            self._logger.info('no file currently in write mode')
 
     def get_available_days(self, month=None):
         """ See DAOObject class"""

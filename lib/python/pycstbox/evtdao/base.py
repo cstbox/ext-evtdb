@@ -218,7 +218,7 @@ class AbstractDAO(log.Loggable):
         This is an optional method, depending on the underlying implementation.
 
         Calling open() for an already opened database should do nothing,
-        apart maybe loging it as a warning.
+        apart maybe logging it as a warning.
         """
         pass
 
@@ -226,6 +226,18 @@ class AbstractDAO(log.Loggable):
         """ Closes the database if not yet done
 
         This is an optional method, depending on the underlying implementation.
+        """
+        pass
+
+    def flush(self):
+        """ Flushes pending writes
+
+        This is an optional method, depending on the underlying implementation.
+
+        This can be used for file based DAOs which do not write data immediately on
+        the support (e.g. for flash memory support saving). When another process
+        needs to access to up-to-date data (e.g. the event browser) it can request
+        that the written data be updated to reflect the real time situation.
         """
         pass
 

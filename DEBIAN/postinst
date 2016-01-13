@@ -2,8 +2,19 @@
 
 SVC="cstbox-evtdb"
 
+# try to detect SSD type storage and set up the start option accordingly
+if disk=$(lsblk -r | grep part |  grep -e "/$" | cut -d' ' -f1 2> /dev/null) ; then
+    if [[ "$disk" =~ ^mmc.* ]] ; then
+        echo "DAEMON_ARGS=\"--flash_memory\"" > /etc/default/$SVC
+        echo "... SDCard mass storage detected: --flash_memory added"
+    fi
+else
+    echo "*** Cannot detect mass storage type. "
+    echo "*** You will have to add --flash_memory option to /etc/default/$SVC "
+    echo "*** if it is a SDCard"
+fi
+
 # starts the service if the CSTBox is currently running
 if [ -e /var/run/cstbox/cstbox-dbus.pid ] ; then
     service $SVC start 
 fi
-

@@ -1,6 +1,6 @@
 Package: cstbox-ext-evtdb
 Version: %(version)s
-Section: base
+Section: embedded
 Priority: optional
 Architecture: all
 Depends: cstbox-core

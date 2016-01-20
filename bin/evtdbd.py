@@ -22,17 +22,17 @@ Starts the service objects handling the access via D-Bus to the database(s)
 associated to one or more events channel.
 """
 
-__author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
-
 import argparse
 import sys
 
-import pycstbox.evtdb as evtdb
-import pycstbox.cli as cli
-import pycstbox.log as log
-import pycstbox.dbuslib as dbuslib
-import pycstbox.evtdao as evtdao
-import pycstbox.evtmgr as evtmgr
+from pycstbox import evtdb 
+from pycstbox import cli 
+from pycstbox import log 
+from pycstbox import dbuslib 
+from pycstbox import evtdao 
+from pycstbox import evtmgr 
+
+__author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 
 # the database "driver" is selected here
 DAO_name = 'fsys'

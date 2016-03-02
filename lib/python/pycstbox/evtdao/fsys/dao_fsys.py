@@ -201,33 +201,31 @@ class EventsDAO(evtdao.AbstractDAO):
 
         fpath = self._get_path_for_day(yyyy, mm, dd)
         try:
-            evtfile = open(fpath, 'r')
-
-        except IOError:
-            return
-
-        else:
-            try:
+            with open(fpath) as evtfile:
                 rec_num = 0
                 for record in evtfile:
                     rec_num += 1
-                    rec_ts, rec_var_type, rec_var_name, rec_value, rec_data = \
-                        record.strip().split(_FLD_SEP)
-                    rec_ts = datetime.strptime(rec_ts.ljust(20, '0'), _TS_FMT)
-                    if var_type and rec_var_type != var_type:
-                        continue
-                    if var_name and var_name != rec_var_name:
-                        continue
-                    data = json.loads(rec_data)
-                    yield events.make_timed_event(
-                        rec_ts, rec_var_type, rec_var_name,
-                        value=rec_value,
-                        **data
-                    )
-            except ValueError as e:
-                raise ValueError("%s ([rec:%d] %s)" % (e.message, rec_num, rec_data))
+                    try:
+                        rec_ts, rec_var_type, rec_var_name, rec_value, rec_data = \
+                            record.strip().split(_FLD_SEP)
+                    except ValueError:
+                        self._logger.warning("stopped at truncated event ([rec:%d] %s)" % (rec_num, record))
+                        return
+                    else:
+                        rec_ts = datetime.strptime(rec_ts.ljust(20, '0'), _TS_FMT)
+                        if var_type and rec_var_type != var_type:
+                            continue
+                        if var_name and var_name != rec_var_name:
+                            continue
+                        data = json.loads(rec_data)
+                        yield events.make_timed_event(
+                            rec_ts, rec_var_type, rec_var_name,
+                            value=rec_value,
+                            **data
+                        )
 
-            evtfile.close()
+        except IOError as e:
+            self._logger.exception(e)
 
     def get_events(self, from_time=None, to_time=None, var_type=None, var_name=None):
         """ See DAOObject class"""

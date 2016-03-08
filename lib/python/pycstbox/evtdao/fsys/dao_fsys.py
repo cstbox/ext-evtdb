@@ -217,12 +217,17 @@ class EventsDAO(evtdao.AbstractDAO):
                             continue
                         if var_name and var_name != rec_var_name:
                             continue
-                        data = json.loads(rec_data)
-                        yield events.make_timed_event(
-                            rec_ts, rec_var_type, rec_var_name,
-                            value=rec_value,
-                            **data
-                        )
+                        try:
+                            data = json.loads(rec_data)
+                        except ValueError:
+                            self._logger.warning("stopped at truncated event ([rec:%d] %s)" % (rec_num, record))
+                            return
+                        else:
+                            yield events.make_timed_event(
+                                rec_ts, rec_var_type, rec_var_name,
+                                value=rec_value,
+                                **data
+                            )
 
         except IOError as e:
             self._logger.exception(e)

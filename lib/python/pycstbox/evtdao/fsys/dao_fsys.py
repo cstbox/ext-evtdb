@@ -199,6 +199,9 @@ class EventsDAO(evtdao.AbstractDAO):
         else:
             yyyy, mm, dd = (int(x) for x in day[:10].replace('/', '-').split('-'))
 
+        def ignore_corrupted_event(_rec_num, _record):
+            self._logger.warning("ignoring corrupted event ([rec:%d] %s)" % (_rec_num, _record))
+
         fpath = self._get_path_for_day(yyyy, mm, dd)
         try:
             with open(fpath) as evtfile:
@@ -209,25 +212,27 @@ class EventsDAO(evtdao.AbstractDAO):
                         rec_ts, rec_var_type, rec_var_name, rec_value, rec_data = \
                             record.strip().split(_FLD_SEP)
                     except ValueError:
-                        self._logger.warning("stopped at truncated event ([rec:%d] %s)" % (rec_num, record))
-                        return
+                        ignore_corrupted_event(rec_num, record)
                     else:
-                        rec_ts = datetime.strptime(rec_ts.ljust(20, '0'), _TS_FMT)
-                        if var_type and rec_var_type != var_type:
-                            continue
-                        if var_name and var_name != rec_var_name:
-                            continue
                         try:
-                            data = json.loads(rec_data)
-                        except ValueError:
-                            self._logger.warning("stopped at truncated event ([rec:%d] %s)" % (rec_num, record))
-                            return
+                            rec_ts = datetime.strptime(rec_ts.ljust(20, '0'), _TS_FMT)
+                        except (TypeError, ValueError):
+                            ignore_corrupted_event(rec_num, record)
                         else:
-                            yield events.make_timed_event(
-                                rec_ts, rec_var_type, rec_var_name,
-                                value=rec_value,
-                                **data
-                            )
+                            if var_type and rec_var_type != var_type:
+                                continue
+                            if var_name and var_name != rec_var_name:
+                                continue
+                            try:
+                                data = json.loads(rec_data)
+                            except ValueError:
+                                ignore_corrupted_event(rec_num, record)
+                            else:
+                                yield events.make_timed_event(
+                                    rec_ts, rec_var_type, rec_var_name,
+                                    value=rec_value,
+                                    **data
+                                )
 
         except IOError as e:
             self._logger.exception(e)

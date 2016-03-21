@@ -22,6 +22,7 @@
 import os
 from datetime import date, datetime
 import json
+import time
 
 from pycstbox import evtdao
 from pycstbox import evtmgr
@@ -42,6 +43,7 @@ class EventsDAO(evtdao.AbstractDAO):
     The events are stored in plain tabulated text files, using a distinct file
     for each day, named using the pattern "YYMMDD.evt-log".
     """
+    MAX_FLUSH_AGE = 3600 * 2        # flush files every 2 hours at least
 
     class Error(Exception):
         """ Exceptions specialized for this DAO."""
@@ -98,6 +100,7 @@ class EventsDAO(evtdao.AbstractDAO):
         self._flash_memory = config.get(evtdao.CFGKEY_FLASH_MEM_SUPPORT, False)
         if self._flash_memory:
             self._logger.warning("flash memory support declared: systematic flush on write will be disabled")
+        self._last_flush = 0
 
     def __enter__(self):
         return self
@@ -162,8 +165,10 @@ class EventsDAO(evtdao.AbstractDAO):
         # system driver do its job by optimizing this. There is a risk of loosing
         # some data in case of brutal stop (power loss f.i.) but it's better than
         # corrupting a whole SD card.
-        if not self._flash_memory:
+        now = time.time()
+        if not self._flash_memory or (now - self._last_flush >= self.MAX_FLUSH_AGE):
             self._current_file.flush()
+            self._last_flush = now
 
     def flush(self):
         """ Flushes the pending writes.

@@ -18,7 +18,6 @@
 
 """ Base material for DAOs implementation and usage.
 """
-__author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 
 from datetime import datetime
 import os.path
@@ -30,6 +29,8 @@ from copy import deepcopy
 import pycstbox.evtmgr as evtmgr
 import pycstbox.log as log
 from pycstbox.config import GlobalSettings
+
+__author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 
 log.setup_logging()
 _logger = log.getLogger('evtdao')

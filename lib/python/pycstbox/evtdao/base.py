@@ -61,7 +61,7 @@ _known_DAOs = {
 }
 
 
-def get_dao(dao_name, events_channel=evtmgr.SENSOR_EVENT_CHANNEL, config=None):
+def get_dao(dao_name, events_channel=evtmgr.SENSOR_EVENT_CHANNEL, config=None, readonly=False):
     """ Returns an instance of the DAO specified by its name, and for a given
     event channel.
 
@@ -73,6 +73,8 @@ def get_dao(dao_name, events_channel=evtmgr.SENSOR_EVENT_CHANNEL, config=None):
     :param dict config:
             optional dictionary containing configuration parameters overriding
             the default ones, or defining additional substitution variables
+    :param bool readonly:
+            uses the DAO in readonly mode
 
     :returns: the DAO instance
     :rtype: AbstractDAO
@@ -110,7 +112,8 @@ def get_dao(dao_name, events_channel=evtmgr.SENSOR_EVENT_CHANNEL, config=None):
 
         return dao_module.EventsDAO(
             events_channel=events_channel,
-            config=cfg
+            config=cfg,
+            readonly=readonly
         )
 
 DATE_FMT = '%Y-%m-%d'

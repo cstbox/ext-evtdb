@@ -34,9 +34,9 @@ import dbus.service
 import dateutil.parser
 
 from pycstbox.log import Loggable
-from pycstbox import evtmgr
-from pycstbox import service
-from pycstbox import dbuslib
+import pycstbox.evtmgr as evtmgr
+import pycstbox.service as service
+import pycstbox.dbuslib as dbuslib
 
 __author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 

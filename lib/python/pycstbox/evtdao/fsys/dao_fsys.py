@@ -177,7 +177,7 @@ class EventsDAO(evtdao.AbstractDAO):
             self._current_file.flush()
             self._logger.info('on-demand data flush executed')
         else:
-            self._logger.info('no file currently in write mode')
+            self._logger.info('nothing to flush (no file currently in write mode)')
 
     def get_available_days(self, month=None):
         """ See DAOObject class"""

@@ -36,6 +36,8 @@ _FILE_EXT = '.evt-log'
 _FLD_SEP = '\t'
 _TS_FMT = '%y%m%d-%H%M%S.%f'
 
+STATS_FNAME = 'stats.dat'
+
 
 class EventsDAO(evtdao.AbstractDAO):
     """ Implements the event data object as a file based storage.
@@ -102,6 +104,14 @@ class EventsDAO(evtdao.AbstractDAO):
             self._logger.warning("flash memory support declared: systematic flush on write will be disabled")
         self._last_flush = 0
 
+        stats_path = os.path.join(self._dbhome, STATS_FNAME)
+        if os.path.exists(stats_path):
+            with open(stats_path) as fp:
+                self._stats = json.load(fp)
+        else:
+            self._stats = {}
+        self._stats_fp = open(stats_path, 'w')
+
     def __enter__(self):
         return self
 
@@ -154,12 +164,16 @@ class EventsDAO(evtdao.AbstractDAO):
                                                         timestamp.day), 'a')
             self._current_day = timestamp.day
 
+        s_timestamp = timestamp.strftime(_TS_FMT)
         self._current_file.write(
-            '\t'.join([timestamp.strftime(_TS_FMT),
+            '\t'.join([s_timestamp,
                 var_type,
                 var_name,
                 str(value),
                 json_data]) + '\n')
+
+        # update the stats
+        self._stats[var_type + ":" + var_name] = timestamp
 
         # Do not stress flash memories by too frequent physical writes, and let the
         # system driver do its job by optimizing this. There is a risk of loosing
@@ -168,6 +182,12 @@ class EventsDAO(evtdao.AbstractDAO):
         now = time.time()
         if not self._flash_memory or (now - self._last_flush >= self.MAX_FLUSH_AGE):
             self._current_file.flush()
+
+            # persist the stats data
+            self._stats_fp.seek(0)
+            json.dump(self._stats, self._stats_fp, indent=4)
+            self._stats_fp.flush()
+
             self._last_flush = now
 
     def flush(self):
@@ -175,6 +195,7 @@ class EventsDAO(evtdao.AbstractDAO):
         """
         if self._current_file:
             self._current_file.flush()
+            self._stats_fp.flush()
             self._logger.info('on-demand data flush executed')
         else:
             self._logger.info('nothing to flush (no file currently in write mode)')

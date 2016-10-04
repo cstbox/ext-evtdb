@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # This file is part of CSTBox.
@@ -16,4 +15,4 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with CSTBox.  If not, see <http://www.gnu.org/licenses/>.
 
-from .base import *
+from base import get_dao, CFGKEY_EVTS_DB_HOME_DIR, CFGKEY_FLASH_MEM_SUPPORT

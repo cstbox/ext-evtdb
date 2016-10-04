@@ -68,7 +68,7 @@ def get_dao(dao_name, events_channel=evtmgr.SENSOR_EVENT_CHANNEL, config=None, r
 
     :param str dao_name:
             the name of the requested DAO (must be defined in the _known_DAOs
-            dictionnary above)
+            dictionary above)
     :param str events_channel:
             the channel of the events (default: sensor events)
     :param dict config:

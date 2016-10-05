@@ -23,10 +23,12 @@ import os
 from datetime import date, datetime
 import json
 import time
+import threading
 
 from pycstbox import evtdao
 from pycstbox import evtmgr
 from pycstbox import events
+from pycstbox import sysutils
 
 __author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 
@@ -115,6 +117,7 @@ class EventsDAO(evtdao.AbstractDAO):
         else:
             self._stats = {}
         self._stats_fp = open(stats_path, 'w')
+        self._stats_lock = threading.Lock()
 
     def __enter__(self):
         return self
@@ -177,7 +180,8 @@ class EventsDAO(evtdao.AbstractDAO):
                 json_data]) + '\n')
 
         # update the stats
-        self._stats[var_type + ":" + var_name] = timestamp
+        with self._stats_lock:
+            self._stats[var_type + ":" + var_name] = timestamp
 
         # Do not stress flash memories by too frequent physical writes, and let the
         # system driver do its job by optimizing this. There is a risk of loosing
@@ -188,11 +192,29 @@ class EventsDAO(evtdao.AbstractDAO):
             self._current_file.flush()
 
             # persist the stats data
-            self._stats_fp.seek(0)
-            json.dump(self._stats, self._stats_fp, indent=4)
-            self._stats_fp.flush()
+            self._stats_dump()
 
             self._last_flush = now
+
+    def _stats_dump(self):
+        d = {
+            vn: sysutils.to_milliseconds(ts)
+            for vn, ts in self._stats.iteritems()
+        }
+
+        with self._stats_lock:
+            self._stats_fp.seek(0)
+            json.dump(d, self._stats_fp, indent=4)
+            self._stats_fp.flush()
+
+    def _stats_load(self, fp):
+        with self._stats_lock:
+            self._stats_fp.seek(0)
+            d = json.load(self._stats_fp)
+            self._stats = {
+                vn: datetime.utcfromtimestamp(ts)
+                for vn, ts in d.iteritems()
+            }
 
     def flush(self):
         """ Flushes the pending writes.

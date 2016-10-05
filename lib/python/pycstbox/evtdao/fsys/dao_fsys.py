@@ -107,7 +107,11 @@ class EventsDAO(evtdao.AbstractDAO):
         stats_path = os.path.join(self._dbhome, STATS_FNAME)
         if os.path.exists(stats_path):
             with open(stats_path) as fp:
-                self._stats = json.load(fp)
+                try:
+                    self._stats = json.load(fp)
+                except ValueError:
+                    self._logger.warning("could not load stats data (maybe empty)")
+                    self._stats = {}
         else:
             self._stats = {}
         self._stats_fp = open(stats_path, 'w')

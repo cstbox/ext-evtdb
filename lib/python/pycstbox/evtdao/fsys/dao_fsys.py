@@ -221,7 +221,7 @@ class EventsDAO(evtdao.AbstractDAO):
         """
         if self._current_file:
             self._current_file.flush()
-            self._stats_fp.flush()
+            self._stats_dump()
             self._logger.info('on-demand data flush executed')
         else:
             self._logger.info('nothing to flush (no file currently in write mode)')

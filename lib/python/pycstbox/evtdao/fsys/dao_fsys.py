@@ -108,15 +108,23 @@ class EventsDAO(evtdao.AbstractDAO):
 
         stats_path = os.path.join(self._dbhome, STATS_FNAME)
         if os.path.exists(stats_path):
+            self._logger.info("loading stats data from %s...", stats_path)
             with open(stats_path) as fp:
                 try:
                     self._stats = json.load(fp)
                 except ValueError:
-                    self._logger.warning("could not load stats data (maybe empty)")
+                    self._logger.warning("could not load stats data (content follows)")
+                    self._logger.warning("--------")
+                    fp.seek(0)
+                    for l in fp:
+                        self._logger.warning('... %s', l.strip())
+                    self._logger.warning("--------")
                     self._stats = {}
+                else:
+                    self._logger.info("stats data loaded")
         else:
             self._stats = {}
-        self._stats_fp = open(stats_path, 'w')
+        self._stats_fp = open(stats_path, 'r+')
         self._stats_lock = threading.Lock()
 
     def __enter__(self):
@@ -207,24 +215,27 @@ class EventsDAO(evtdao.AbstractDAO):
             json.dump(d, self._stats_fp, indent=4)
             self._stats_fp.flush()
 
-    def _stats_load(self, fp):
-        with self._stats_lock:
-            self._stats_fp.seek(0)
-            d = json.load(self._stats_fp)
-            self._stats = {
-                vn: datetime.utcfromtimestamp(ts)
-                for vn, ts in d.iteritems()
-            }
+        self._logger.info("stats data flushed to storage")
+
+    # def _stats_load(self, fp):
+    #     with self._stats_lock:
+    #         fp.seek(0)
+    #         d = json.load(self._stats_fp)
+    #         self._stats = {
+    #             vn: datetime.utcfromtimestamp(ts / 1000)
+    #             for vn, ts in d.iteritems()
+    #         }
 
     def flush(self):
         """ Flushes the pending writes.
         """
         if self._current_file:
             self._current_file.flush()
-            self._stats_dump()
             self._logger.info('on-demand data flush executed')
         else:
             self._logger.info('nothing to flush (no file currently in write mode)')
+
+        self._stats_dump()
 
     def get_available_days(self, month=None):
         """ See DAOObject class"""
